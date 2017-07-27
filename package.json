@@ -15,7 +15,7 @@
     "link:generator": "lerna exec --scope generator-theia --stream -- yarn link && yarn link generator-theia",
     "prepare:packages": "yarn run bootstrap && yarn run clean && yarn run clean:rebuild && yarn run build",
     "bootstrap": "node scripts/generate && node scripts/lerna bootstrap --scope \"@theia/*\" --hoist -- --no-optional",
-    "refresh": "node scripts/lerna clean --scope \"@theia/*\" --yes && yarn run bootstrap",
+    "refresh": "yarn run build:generator && node scripts/lerna clean --scope \"@theia/*\" --yes && yarn run bootstrap",
     "clean": "node scripts/lerna run clean --scope \"@theia/*\" --parallel",
     "build": "node scripts/lerna run build --scope \"@theia/*\" --stream",
     "docs": "node scripts/lerna run docs --scope \"@theia/*\" --stream",
@@ -28,7 +28,7 @@
     "rebuild:browser": "node generator-theia/bin/rebuild --target=browser",
     "rebuild:electron": "node generator-theia/bin/rebuild --target=electron",
     "rebuild:electron:debug": "DEBUG=electron-rebuild && yarn run rebuild:electron",
-    "watch": "lerna run watch --scope \"@theia/!(example-)*\" --parallel",
+    "watch": "lerna run watch --scope \"@theia/!(example-)*\" --include-filtered-dependencies --parallel",
     "publish": "yarn && yarn test && yarn run publish:latest && node scripts/update-versions",
     "publish:latest": "lerna publish --registry=https://registry.npmjs.org/ --exact --skip-git",
     "publish:next": "lerna publish --registry=https://registry.npmjs.org/ --exact --canary=next --npm-tag=next --force-publish --skip-git --yes"

@@ -96,7 +96,7 @@ export interface ExtensionConfig {
 }
 
 export function sortByKey(object: { [key: string]: any }): { [key: string]: any } {
-    return Object.keys(object).sort().reduce((sorted, key) => {
+    return Object.keys(object).sort().reduce((sorted: { [key: string]: any }, key) => {
         sorted[key] = object[key];
         return sorted;
     }, {});
@@ -114,6 +114,7 @@ export function npmView(name: string): Promise<ViewResult | undefined> {
 export class Model {
     target: 'web' | 'electron-renderer' | undefined;
     pck: NodePackage = {};
+    targetPck: NodePackage = {};
     readonly defaultConfig = <Config>{
         copyright: '',
         node_modulesPath: "./node_modules"

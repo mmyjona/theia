@@ -5,6 +5,8 @@
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  */
 
+import * as process from 'process';
+import * as cp from 'child_process';
 import BaseGenerator = require('yeoman-generator');
 
 import { Model } from "./generator-model";
@@ -16,7 +18,8 @@ export abstract class AbstractAppGenerator extends BaseGenerator {
     protected readonly pck = new AppPackageGenerator(this.model);
 
     initializing(): void {
-        this.model.pck = this.fs.readJSON('theia.package.json') || {};
+        this.model.targetPck = this.fs.readJSON(this.destinationPath('package.json'), {});
+        this.model.pck = this.fs.readJSON(this.destinationPath('theia.package.json'), {});
         this.config.defaults(this.model.defaultConfig);
         Object.assign(this.model.config, this.config.getAll());
     }
@@ -36,6 +39,23 @@ export abstract class AbstractAppGenerator extends BaseGenerator {
             }
             return undefined;
         });
+    }
+
+    protected version(pck: string): string | undefined {
+        return this.info(pck, 'version');
+    }
+
+    protected info(pck: string, ...viewArgs: string[]): any | undefined {
+        const raw = ['npm', 'view', pck, '--json', ...viewArgs];
+        const args = process.platform === 'win32' ? ['cmd', '/c', ...raw] : raw;
+        try {
+            return JSON.parse(cp.execSync(args.join(' '), {
+                encoding: 'utf8'
+            }));
+        } catch (e) {
+            console.error(e);
+            return undefined;
+        }
     }
 
     writing(): void {
