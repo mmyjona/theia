@@ -10,9 +10,6 @@
     "@types/xterm": "^2.0.3",
     "xterm": "^2.8.1"
   },
-  "publishConfig": {
-    "access": "public"
-  },
   "theiaExtensions": [
     {
       "frontend": "lib/browser/terminal-frontend-module",
