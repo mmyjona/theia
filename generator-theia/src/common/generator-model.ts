@@ -76,13 +76,6 @@ export interface Extension {
     backendElectron?: string;
 }
 
-export interface Extension {
-    frontend?: string;
-    frontendElectron?: string;
-    backend?: string;
-    backendElectron?: string;
-}
-
 export interface Config {
     copyright: string;
     node_modulesPath: string;
