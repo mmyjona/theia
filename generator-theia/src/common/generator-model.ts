@@ -107,6 +107,7 @@ export function npmView(name: string): Promise<ViewResult | undefined> {
 export class ProjectModel {
     target: 'web' | 'electron-renderer' | undefined;
     pck: NodePackage = {};
+    pckPath: string;
     targetPck: NodePackage = {};
     readonly defaultConfig = <Config>{
         copyright: '',
@@ -238,6 +239,21 @@ export class ProjectModel {
             }
         }
         return result;
+    }
+
+    setDependency(name: string, version: string | undefined): boolean {
+        const dependencies = this.pck.dependencies || {};
+        const currentVersion = dependencies[name];
+        if (currentVersion === version) {
+            return false;
+        }
+        if (version) {
+            dependencies[name] = version;
+        } else {
+            delete dependencies[name];
+        }
+        this.pck.dependencies = dependencies;
+        return true;
     }
 
 }

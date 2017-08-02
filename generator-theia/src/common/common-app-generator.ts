@@ -17,7 +17,8 @@ export class CommonAppGenerator extends BaseGenerator {
 
     initializing(): void {
         this.model.targetPck = this.fs.readJSON(this.destinationPath('package.json'), {});
-        this.model.pck = this.fs.readJSON(this.destinationPath('theia.package.json'), {});
+        this.model.pckPath = this.destinationPath('theia.package.json');
+        this.model.pck = this.fs.readJSON(this.model.pckPath, {});
         this.config.defaults(this.model.defaultConfig);
         Object.assign(this.model.config, this.config.getAll());
     }
