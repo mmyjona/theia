@@ -104,7 +104,7 @@ export function npmView(name: string): Promise<ViewResult | undefined> {
     });
 }
 
-export class Model {
+export class ProjectModel {
     target: 'web' | 'electron-renderer' | undefined;
     pck: NodePackage = {};
     targetPck: NodePackage = {};

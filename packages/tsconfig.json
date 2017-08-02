@@ -33,6 +33,9 @@
             "@theia/navigator/lib/*": [
                 "navigator/src/*"
             ],
+            "@theia/preferences-api": [
+                "preferences-api/src/common"
+            ],
             "@theia/preferences-api/lib/*": [
                 "preferences-api/src/*"
             ],
