@@ -24,7 +24,8 @@
                 "${workspaceRoot}/examples/electron/src-gen/backend/main.js",
                 "${workspaceRoot}/examples/electron/lib/**/*.js",
                 "${workspaceRoot}/packages/*/lib/**/*.js"
-            ]
+            ],
+            "smartStep": true
         },
         {
             "type": "node",
@@ -33,14 +34,17 @@
             "program": "${workspaceRoot}/examples/browser/src-gen/backend/main.js",
             "args": [
                 "--loglevel=debug",
-                "--port=3000"
+                "--port=3000",
+                "--app-project-path=${workspaceRoot}/examples/browser"
+                //, "--app-no-auto-install"
             ],
             "sourceMaps": true,
             "outFiles": [
                 "${workspaceRoot}/examples/browser/src-gen/backend/main.js",
                 "${workspaceRoot}/examples/browser/lib/**/*.js",
                 "${workspaceRoot}/packages/*/lib/**/*.js"
-            ]
+            ],
+            "smartStep": true
         },
         {
             "type": "node",
@@ -57,7 +61,8 @@
                 "${workspaceRoot}/examples/browser/src-gen/backend/main.js",
                 "${workspaceRoot}/examples/browser/lib/**/*.js",
                 "${workspaceRoot}/packages/*/lib/**/*.js"
-            ]
+            ],
+            "smartStep": true
         },
         {
             "type": "node",
@@ -81,7 +86,8 @@
             },
             "sourceMaps": true,
             "internalConsoleOptions": "openOnSessionStart",
-            "port": 9229
+            "port": 9229,
+            "smartStep": true
         },
         {
             "name": "Launch Frontend",

@@ -69,6 +69,58 @@ export namespace ExtensionPackage {
     }
 }
 
+export class ExtensionPackageDiff {
+    protected readonly _toAdd = new Map<string, string>();
+    protected readonly _toRemove = new Set<string>();
+    protected readonly _toLink = new Map<string, string>();
+    protected readonly _toUnlink = new Set<string>();
+    protected readonly all = [this._toAdd, this._toRemove, this._toLink, this._toUnlink];
+
+    get empty(): boolean {
+        for (const collection of this.all) {
+            if (collection.size !== 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+    get toAdd(): ReadonlyMap<string, string> {
+        return this._toAdd;
+    }
+    get toRemove(): ReadonlySet<string> {
+        return this._toRemove;
+    }
+    get toLink(): ReadonlyMap<string, string> {
+        return this._toLink;
+    }
+    get toUnlink(): ReadonlySet<string> {
+        return this._toUnlink;
+    }
+
+    add(name: string, version: string): void {
+        this.delete(name);
+        this._toAdd.set(name, version);
+    }
+    remove(name: string): void {
+        this.delete(name);
+        this._toRemove.add(name);
+    }
+    link(name: string, localPath: string): void {
+        this.delete(name);
+        this._toLink.set(name, localPath);
+    }
+    unlink(name: string): void {
+        this.delete(name);
+        this._toUnlink.add(name);
+    }
+    protected delete(name: string): void {
+        for (const collection of this.all) {
+            collection.delete(name);
+        }
+    }
+
+}
+
 export interface Extension {
     frontend?: string;
     frontendElectron?: string;
@@ -156,11 +208,11 @@ export class ProjectModel {
                     console.error(`failed to find ${extension}@${version} on npm`);
                 }
                 return extensionPackage;
-            }, localPath);
+            });
         }
     }
 
-    protected async readExtensionPackage(extension: string, read: () => Promise<ExtensionPackage | undefined>, localPath?: string): Promise<void> {
+    protected async readExtensionPackage(extension: string, read: () => Promise<ExtensionPackage | undefined>): Promise<void> {
         if (!this._extensionPackages.has(extension)) {
             const extensionPackage = await read();
             if (extensionPackage) {
@@ -254,6 +306,41 @@ export class ProjectModel {
         }
         this.pck.dependencies = dependencies;
         return true;
+    }
+
+    protected _diff: ExtensionPackageDiff | undefined;
+    get diff(): ExtensionPackageDiff {
+        if (!this._diff) {
+            this._diff = this.computDiff();
+        }
+        return this._diff;
+    }
+    protected computDiff(): ExtensionPackageDiff {
+        const installedDependencies = (this.targetPck.dependencies || {});
+        const extensionPackages = this.extensionPackages;
+        const diff = new ExtensionPackageDiff();
+        for (const extensionPackage of extensionPackages) {
+            if (extensionPackage.name in installedDependencies) {
+                continue;
+            }
+            if (extensionPackage.localPath) {
+                diff.link(extensionPackage.name, extensionPackage.localPath);
+            } else {
+                diff.add(extensionPackage.name, extensionPackage.version!);
+            }
+        }
+
+        for (const name in installedDependencies) {
+            if (extensionPackages.some(p => p.name === name)) {
+                continue;
+            }
+            if (name in this.config.localDependencies) {
+                diff.unlink(name);
+            } else {
+                diff.remove(name);
+            }
+        }
+        return diff;
     }
 
 }

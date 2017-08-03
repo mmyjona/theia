@@ -61,7 +61,7 @@ export class AppPackageGenerator extends AbstractGenerator {
                 ...devDependencies,
                 ...this.model.pck.devDependencies
             })
-        }
+        };
     }
 
     protected compileWebpackConfig(): string {
@@ -72,13 +72,13 @@ const webpack = require('webpack');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const CircularDependencyPlugin = require('circular-dependency-plugin');
 
-const outputPath = path.resolve(__dirname, 'lib');
+const outputPath = path.resolve(__dirname, 'lib');${this.ifMonaco(`
 
 const monacoEditorPath = '${this.node_modulesPath()}/monaco-editor-core/min/vs';
 const monacoLanguagesPath = '${this.node_modulesPath()}/monaco-languages/release';
 const monacoCssLanguagePath = '${this.node_modulesPath()}/monaco-css/release/min';
 const monacoJsonLanguagePath = '${this.node_modulesPath()}/monaco-json/release/min';
-const monacoHtmlLanguagePath = '${this.node_modulesPath()}/monaco-html/release/min';${this.ifWeb(`
+const monacoHtmlLanguagePath = '${this.node_modulesPath()}/monaco-html/release/min';`)}${this.ifWeb(`
 const requirePath = '${this.node_modulesPath()}/requirejs/require.js';
 
 const port = require('yargs').argv.port || 3000;`)}
@@ -121,10 +121,10 @@ module.exports = {
         noParse: /vscode-languageserver-types|vscode-uri/
     },
     resolve: {
-        extensions: ['.js'],
+        extensions: ['.js']${this.ifMonaco(`,
         alias: {
             'vs': path.resolve(outputPath, monacoEditorPath)
-        }
+        }`)}
     },
     devtool: 'source-map',
     plugins: [
@@ -133,7 +133,7 @@ module.exports = {
             {
                 from: requirePath,
                 to: '.'
-            },`)}
+            },`)}${this.ifMonaco(`
             {
                 from: monacoEditorPath,
                 to: 'vs'
@@ -153,16 +153,16 @@ module.exports = {
             {
                 from: monacoHtmlLanguagePath,
                 to: 'vs/language/html'
-            }
+            }`)}
         ]),
         new CircularDependencyPlugin({
             exclude: /(node_modules|examples)\\/./,
             failOnError: false // https://github.com/nodejs/readable-stream/issues/280#issuecomment-297076462
         })
     ],
-    stats: {
-        warnings: true
-    }${this.ifWeb(`,
+        stats: {
+            warnings: true
+        } ${this.ifWeb(`,
     devServer: {
         inline: true,
         hot: true,
@@ -180,8 +180,9 @@ module.exports = {
         },
         host: process.env.HOST,
         port: process.env.PORT
-    }`)}
-};`
+    }`)
+            }
+    };`
     }
 
 }
