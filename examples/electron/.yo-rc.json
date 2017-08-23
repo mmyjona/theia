@@ -18,6 +18,7 @@
       "@theia/python": "../../packages/python",
       "@theia/cpp": "../../packages/cpp",
       "@theia/go": "../../packages/go",
+      "@theia/git": "../../packages/git",
       "@theia/typescript": "../../packages/typescript",
       "@theia/markers": "../../packages/markers"
     },
