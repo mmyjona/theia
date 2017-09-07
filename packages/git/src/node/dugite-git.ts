@@ -14,7 +14,7 @@ import { getStatus } from 'dugite-extra/lib/command/status';
 import { stage, unstage } from 'dugite-extra/lib/command/stage';
 import { locateRepositories } from './git-repository-locator';
 import { WorkspaceServer } from '@theia/workspace/lib/common/workspace-protocol';
-import { Repository, RepositoryWithRemote, WorkingDirectoryStatus, FileChange, FileStatus } from '../common/model';
+import { Repository, WorkingDirectoryStatus, FileChange, FileStatus } from '../common/model';
 import { IStatusResult, IAheadBehind, AppFileStatus, WorkingDirectoryStatus as DugiteStatus, FileChange as DugiteFileChange } from 'dugite-extra/lib/model/status';
 
 /**
@@ -27,6 +27,9 @@ export class DugiteGit implements Git {
         @inject(WorkspaceServer) private readonly workspace: WorkspaceServer) {
     }
 
+    async clone(remoteUrl: string, options?: Git.Options.Clone | undefined): Promise<Repository> {
+        throw new Error("Method not implemented.");
+    }
     async repositories(): Promise<Repository[]> {
         const workspaceRoot = await this.workspace.getRoot();
         const path = await getFsPath(workspaceRoot);
@@ -72,7 +75,7 @@ export class DugiteGit implements Git {
         throw new Error("Method not implemented.");
     }
 
-    async checkout(repository: Repository, name: string, localName?: string): Promise<void> {
+    checkout(repository: Repository, options: Git.Options.Checkout.Branch | Git.Options.Checkout.WorkingTreeFile): Promise<void> {
         throw new Error("Method not implemented.");
     }
 
@@ -80,15 +83,15 @@ export class DugiteGit implements Git {
         throw new Error("Method not implemented.");
     }
 
-    async fetch(repository: RepositoryWithRemote): Promise<void> {
+    async fetch(repository: Repository): Promise<void> {
         throw new Error("Method not implemented.");
     }
 
-    async push(repository: RepositoryWithRemote): Promise<void> {
+    async push(repository: Repository): Promise<void> {
         throw new Error("Method not implemented.");
     }
 
-    async pull(repository: RepositoryWithRemote): Promise<void> {
+    async pull(repository: Repository): Promise<void> {
         throw new Error("Method not implemented.");
     }
 
@@ -101,6 +104,10 @@ export class DugiteGit implements Git {
     }
 
     async rebase(repository: Repository, name: string): Promise<void> {
+        throw new Error("Method not implemented.");
+    }
+
+    async show(repository: Repository, uri: string, options?: Git.Options.Show | undefined): Promise<Buffer> {
         throw new Error("Method not implemented.");
     }
 
