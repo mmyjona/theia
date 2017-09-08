@@ -8,7 +8,7 @@
 import { Repository, WorkingDirectoryStatus } from './model';
 
 /**
- * The WS endpoint path to the Git.
+ * The WS endpoint path to the Git service.
  */
 export const GitPath = '/services/git';
 
@@ -17,12 +17,98 @@ export const GitPath = '/services/git';
  */
 export const Git = Symbol('Git');
 
+
 export namespace Git {
 
     /**
      * Options for various Git commands.
      */
     export namespace Options {
+
+        /**
+         * Refinements for the `git branch` command.
+         */
+        export namespace Branch {
+
+            /**
+             * Option for listing branches in a Git repository.
+             */
+            export interface List {
+
+                /**
+                 * The type of the branches that has to be listed. If not
+                 *  - `current` returns with the name of the currently active branch.
+                 *  - `local` lists all locally available branch names.
+                 *  - `remote` for listing all remote branches. One might has to perform a `git fetch` to integrate all the remote branches.
+                 *  - `all` lists all remote and local branches including the currently active one.
+                 */
+                readonly type: 'current' | 'local' | 'remote' | 'all';
+
+            }
+
+            /**
+             * Option for creating a new branch.
+             */
+            export interface Create {
+
+                /**
+                 * The desired name of the new branch.
+                 */
+                readonly toCreate: string;
+
+                /**
+                 * The new branch head will point to this commit. It may be given as a branch name, a commit-id, or a tag.
+                 * If this option is omitted, the current `HEAD` will be used instead.
+                 */
+                readonly startPoint?: string;
+
+            }
+
+            /**
+             * Option for deleting a branch. The branch must be fully merged in its upstream branch, or in `HEAD` if no upstream was set.
+             */
+            export interface Delete {
+
+                /**
+                 * The name of the branch to delete.
+                 */
+                readonly toDelete: string;
+
+                /**
+                 * When set to `true`, then allows deleting the branch irrespective of its merged status. `false` by default.
+                 */
+                readonly force?: boolean;
+
+                /**
+                 * When set to `true` then deletes the remote-tracking branches as well. It is `false` by default.
+                 */
+                readonly remote?: boolean;
+
+            }
+
+            /**
+             * Option for renaming an existing branch.
+             */
+            export interface Rename {
+
+                /**
+                 * The desired new name of the branch.
+                 */
+                readonly newName: string;
+
+                /**
+                 * The name of the branch to rename. If not given, then the currently active branch will be renamed.
+                 */
+                readonly oldName?: string;
+
+                /**
+                 * If set to `true`, the allows renaming the branch even if the new branch name already exists. It is `false` by default.
+                 */
+                readonly force?: boolean;
+
+            }
+
+        }
 
         /**
          * Git clone options.
@@ -141,7 +227,7 @@ export namespace Git {
              * `HEAD` is the local `HEAD`, and `index` is the the staged. If not specified,
              * then `HEAD` will be used instead. But this can be `HEAD~2` or `ed14ef1~1` where `ed14ef1` is a commit hash.
              */
-            readonly commitish?: 'index' | string
+            readonly commitish?: 'index' | string;
 
         }
 
@@ -149,11 +235,14 @@ export namespace Git {
 
 }
 
+
+
 /**
  * Provides basic functionality for Git.
  *
  * TODOs:
  *  - register/remove repositories that are currently outside of the workspace but user wants to track the changes.
+ *  - Wrap all other than `Repository` arguments into Option?
  */
 export interface Git {
 
@@ -193,44 +282,24 @@ export interface Git {
      * @param repository the repository to where the staged files have to be removed from/
      * @param uri one or multiple file URIs to unstage in the working clone.
      */
-    rm(repository: Repository, uri: string | string[]): Promise<void>;
+    rm(repository: Repository, uri: string | string[], ): Promise<void>;
 
     /**
-     * Returns with the name of the branches from the repository. Will be rejected if the repository does not exist.
-     * This method will be resolved to a `string` if the `type === 'current`. If the repository has a detached `HEAD`,
-     * instead of returning with `(no branch)` it resolves to `undefined`. Otherwise, it will be resolved to an array of
-     * branch names.
+     * Lists, creates, renames or deletes a branch.
+     *
+     *  - It returns with either `undefined`, or a `string` or an array of `string`s when listing the branches. A single
+     * `string` value will be provided if the `type` is `current`. It returns with `undefined` if the current branch is detached.
+     * Otherwise it returns with an array of branch names.
+     *  - It returns with a promise that resolves to `void` when creating, renaming or deleting a branch.
      *
      * @param the repository to get the active branch from.
      * @param type the type of the query to run. The default type is `current`.
      */
-    branch(repository: Repository, type?: 'current' | 'local' | 'remote' | 'all'): Promise<undefined | string | string[]>;
-
-    /**
-     * Creates a new branch in the repository.
-     *
-     * @param repository the repository where the new branch has to be created.
-     * @param name the name of the new branch.
-     * @param startPoint the commit SH that the new branch should be based on, or `undefined` if the branch should be created based off of the current state of `HEAD`.
-     */
-    createBranch(repository: Repository, name: string, startPoint?: string): Promise<void>;
-
-    /**
-     * Renames an existing branch in the repository.
-     *
-     * @param repository the repository where the renaming has to be performed.
-     * @param name the current name of the branch to rename.
-     * @param newName the desired name of the branch.
-     */
-    renameBranch(repository: Repository, name: string, newName: string): Promise<void>;
-
-    /**
-     * Deletes an existing branch in the repository.
-     *
-     * @param repository the repository where the branch has to be deleted.
-     * @param name the name of the existing branch to delete.
-     */
-    deleteBranch(repository: Repository, name: string): Promise<void>;
+    branch(repository: Repository, options:
+        Git.Options.Branch.List |
+        Git.Options.Branch.Create |
+        Git.Options.Branch.Rename |
+        Git.Options.Branch.Delete): Promise<void | undefined | string | string[]>;
 
     /**
      * Switches branches or restores working tree files.
@@ -305,6 +374,43 @@ export interface Git {
      * @param uri the URI of the file who's content has to be retrieved and shown.
      * @param options the options for further refining the `git show`.
      */
-    show(repository: Repository, uri: string, options?: Git.Options.Show): Promise<Buffer>
+    show(repository: Repository, uri: string, options?: Git.Options.Show): Promise<Buffer>;
 
 }
+
+/**
+ * Contains a set of utility functions for [Git](#Git).
+ */
+export namespace GitUtils {
+
+    /**
+     * `true` if the argument is an option for renaming an existing branch in the repository.
+     */
+    export function isRename(any: any | undefined): any is Git.Options.Branch.Rename {
+        return (<Git.Options.Branch.Rename>any).newName !== undefined;
+    }
+
+
+    /**
+     * `true` if the argument is an option for deleting an existing branch in the repository.
+     */
+    export function isDelete(any: any | undefined): any is Git.Options.Branch.Delete {
+        return (<Git.Options.Branch.Delete>any).toDelete !== undefined;
+    }
+
+    /**
+     * `true` if the argument is an option for creating a new branch in the repository.
+     */
+    export function isCreate(any: any | undefined): any is Git.Options.Branch.Create {
+        return (<Git.Options.Branch.Create>any).toCreate !== undefined;
+    }
+
+    /**
+     * `true` if the argument is an option for listing the branches in a repository.
+     */
+    export function isList(any: any | undefined): any is Git.Options.Branch.List {
+        return (<Git.Options.Branch.List>any).type !== undefined;
+    }
+
+}
+

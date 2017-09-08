@@ -11,6 +11,7 @@ import { git } from 'dugite-extra/lib/core/git';
 import { injectable, inject } from "inversify";
 import { FileUri } from '@theia/core/lib/node/file-uri';
 import { getStatus } from 'dugite-extra/lib/command/status';
+// import { createBranch, deleteBranch, renameBranch } from 'dugite-extra/lib/command/branch';
 import { stage, unstage } from 'dugite-extra/lib/command/stage';
 import { locateRepositories } from './git-repository-locator';
 import { WorkspaceServer } from '@theia/workspace/lib/common/workspace-protocol';
@@ -59,23 +60,16 @@ export class DugiteGit implements Git {
         return unstage(repository.localUri, paths);
     }
 
-    async branch(repository: Repository, type?: "current" | "local" | "remote" | "all"): Promise<undefined | string | string[]> {
-        throw new Error("Method not implemented.");
+    async branch(repository: Repository,
+        options: Git.Options.Branch.List |
+            Git.Options.Branch.Create |
+            Git.Options.Branch.Rename |
+            Git.Options.Branch.Delete): Promise<string | void | string[] | undefined> {
+
+        throw new Error('implement me');
     }
 
-    async createBranch(repository: Repository, name: string, startPoint?: string): Promise<void> {
-        throw new Error("Method not implemented.");
-    }
-
-    async renameBranch(repository: Repository, name: string, newName: string): Promise<void> {
-        throw new Error("Method not implemented.");
-    }
-
-    async deleteBranch(repository: Repository, name: string): Promise<void> {
-        throw new Error("Method not implemented.");
-    }
-
-    checkout(repository: Repository, options: Git.Options.Checkout.Branch | Git.Options.Checkout.WorkingTreeFile): Promise<void> {
+    async checkout(repository: Repository, options: Git.Options.Checkout.Branch | Git.Options.Checkout.WorkingTreeFile): Promise<void> {
         throw new Error("Method not implemented.");
     }
 
