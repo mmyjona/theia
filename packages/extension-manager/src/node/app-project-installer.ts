@@ -118,7 +118,7 @@ export class AppProjectInstaller {
             await fs.ensureSymlink(srcPackagePath, destPackagePath, 'dir');
         }
         for (const [name, version] of diff.toAdd.entries()) {
-            //TODO shouldn't this be handled by 'npm/yarn install'?
+            // TODO shouldn't this be handled by 'npm/yarn install'?
             await this.npm('add', [`${name}@${version}`]);
         }
     }
@@ -133,7 +133,7 @@ export class AppProjectInstaller {
             checkCancelled(this.options.token);
             await fs.ensureSymlink(binSrcPath, binDestPath, 'dir');
         } else {
-            //TODO this is too early, as the generator has not created the package.json yet (it gets added through add above, but is empty otherwise)
+            // TODO this is too early, as the generator has not created the package.json yet (it gets added through add above, but is empty otherwise)
             await this.npm('install', []);
         }
     }
