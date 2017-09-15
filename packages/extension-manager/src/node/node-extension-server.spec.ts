@@ -8,7 +8,7 @@
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import * as assert from 'assert';
-import { ExtensionChange, ExtensionClient, ExtensionServer } from '../common/extension-protocol';
+import { ExtensionClient, ExtensionServer } from '../common/extension-protocol';
 import extensionNodeTestContainer from './test/extension-node-test-container';
 import { AppProject } from './app-project';
 
@@ -20,9 +20,7 @@ const appProjectPath = path.resolve(__dirname, '..', '..', 'test-resources', 'te
 export function waitForDidChange(): Promise<void> {
     return new Promise(resolve => {
         server.setClient(<ExtensionClient>{
-            onDidChange: function (extensionChange: ExtensionChange) {
-                resolve();
-            }
+            onDidChange: extensionChange => resolve()
         });
     });
 }
@@ -41,13 +39,13 @@ describe("NodeExtensionServer", function () {
         });
         server = container.get(ExtensionServer);
         appProject = container.get(AppProject);
-        return waitForDidChange();
     });
 
-    afterEach(function () {
+    afterEach(async function () {
         this.timeout(50000);
         server.dispose();
         appProject.dispose();
+        await appProject.onDispose;
         fs.removeSync(appProjectPath);
     });
 

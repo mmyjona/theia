@@ -5,13 +5,11 @@
   "dependencies": {
     "@theia/core": "^0.1.1",
     "@theia/filesystem": "^0.1.1",
-    "@types/request": "^2.0.0",
-    "generator-theia": "^0.1.1",
-    "request": "^2.81.0",
-    "showdown": "^1.7.2",
+    "@types/sanitize-html": "^1.13.31",
     "@types/showdown": "^1.4.32",
+    "generator-theia": "^0.1.1",
     "sanitize-html": "^1.14.1",
-    "@types/sanitize-html": "^1.13.31"
+    "showdown": "^1.7.2"
   },
   "theiaExtensions": [
     {

@@ -69,3 +69,21 @@ export class DisposableCollection implements Disposable {
     }
 
 }
+
+const disposedMessage = 'Disposed';
+
+export function disposed(): Error {
+    return new Error(disposedMessage);
+}
+
+export function isDisposed(err: Error | undefined): boolean {
+    return !!err && err.message === disposedMessage;
+}
+
+export function checkDisposed(toDispose?: {
+    readonly disposed: boolean
+}): void {
+    if (!!toDispose && toDispose.disposed) {
+        throw disposed();
+    }
+}

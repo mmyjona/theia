@@ -12,7 +12,7 @@ import { TheiaBrowserGenerator } from 'generator-theia/generators/browser/browse
 import { TheiaElectronGenerator } from 'generator-theia/generators/electron/electron-generator';
 import {
     MaybePromise, Disposable, DisposableCollection, Event, Emitter, ILogger,
-    CancellationTokenSource, CancellationToken, isCancelled
+    CancellationTokenSource, CancellationToken, isCancelled, isDisposed, checkDisposed
 } from "@theia/core";
 import { FileUri, ServerProcess } from "@theia/core/lib/node";
 
@@ -65,10 +65,18 @@ export class AppProject implements Disposable {
         });
         this.toDispose.push(this.onWillInstallEmitter);
         this.toDispose.push(this.onDidInstallEmitter);
+        this.toDispose.push(Disposable.create(() => this.installationTokenSource.cancel()));
     }
 
     dispose(): void {
         this.toDispose.dispose();
+    }
+    get onDispose(): Promise<void> {
+        if (this.toDispose.disposed) {
+            return this.installed;
+        }
+        const disposed = new Promise<void>(resolve => this.toDispose.onDispose(resolve));
+        return Promise.all([disposed, this.installed]).then(() => { });
     }
 
     get onDidChangePackage(): Event<void> {
@@ -92,9 +100,10 @@ export class AppProject implements Disposable {
     }
 
     load(): Promise<ProjectModel> {
-        return this.generator.then(generator => generator.model);
+        return this.getGenerator().then(generator => generator.model);
     }
-    protected get generator(): Promise<CommonAppGenerator> {
+    protected async getGenerator(): Promise<CommonAppGenerator> {
+        await this.ensureProjectConfigExists();
         const generatorConstructor = this.options.target === 'browser' ? TheiaBrowserGenerator : TheiaElectronGenerator;
         const generator = new generatorConstructor([], {
             env: {
@@ -105,6 +114,17 @@ export class AppProject implements Disposable {
         generator.destinationRoot(this.options.path);
         generator.initializing();
         return generator.configuring().then(() => generator);
+    }
+    /**
+     * If the project config does not exist yeoman will pick the parent directory with the config as a project directory.
+     */
+    protected async ensureProjectConfigExists(): Promise<void> {
+        const projectConfig = FileUri.create(this.options.path).resolve('.yo-rc.json').toString();
+        try {
+            await this.fileSystem.createFile(projectConfig, {
+                content: '{}'
+            });
+        } catch { /* exist */ }
     }
 
     async save(model: MaybePromise<ProjectModel>): Promise<void> {
@@ -148,9 +168,9 @@ export class AppProject implements Disposable {
     protected installed: Promise<void> = Promise.resolve();
     protected installationTokenSource = new CancellationTokenSource();
     async scheduleInstall(params: InstallParams = { force: false }): Promise<void> {
-        if (this.installationTokenSource) {
-            this.installationTokenSource.cancel();
-        }
+        checkDisposed(this.toDispose);
+        this.installationTokenSource.cancel();
+
         this.installationTokenSource = new CancellationTokenSource();
         const token = this.installationTokenSource.token;
         this.installed = this.installed.then(() => this.install(params, token));
@@ -169,6 +189,9 @@ export class AppProject implements Disposable {
                 this.fireDidInstall();
                 this.serverProcess.restart();
             } catch (err) {
+                if (isDisposed(err)) {
+                    throw err;
+                }
                 if (isCancelled(err)) {
                     this.logger.info('The app installation is cancelled');
                     return;
@@ -184,7 +207,9 @@ export class AppProject implements Disposable {
     }
 
     protected async installer(token?: CancellationToken): Promise<AppProjectInstaller> {
-        const generator = await this.generator;
+        checkDisposed(this.toDispose);
+
+        const generator = await this.getGenerator();
         return this.installerFactory({
             generator,
             projectPath: this.options.path,

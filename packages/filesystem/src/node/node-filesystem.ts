@@ -183,35 +183,17 @@ export class FileSystemNode implements FileSystem {
         });
     }
 
-    createFile(uri: string, options?: { content?: string, encoding?: string }): Promise<FileStat> {
-        return new Promise<FileStat>((resolve, reject) => {
-            const _uri = new URI(uri);
-            const stat = this.doGetStat(_uri, 0);
-            if (stat) {
-                return reject(new Error(`Error occurred while creating the file. File already exists at ${uri}.`));
-            }
-            const parentUri = _uri.parent;
-            const doCreateFile = () => {
-                const content = this.doGetContent(options);
-                const encoding = this.doGetEncoding(options);
-                fs.writeFile(FileUri.fsPath(_uri), content, { encoding }, error => {
-                    if (error) {
-                        return reject(error);
-                    }
-                    resolve(this.doGetStat(_uri, 1));
-                });
-            }
-            if (!this.doGetStat(parentUri, 0)) {
-                fs.mkdirs(FileUri.fsPath(parentUri), error => {
-                    if (error) {
-                        return reject(error);
-                    }
-                    doCreateFile();
-                });
-            } else {
-                doCreateFile();
-            }
-        });
+    async createFile(raw: string, options?: { content?: string, encoding?: string }): Promise<FileStat> {
+        const uri = new URI(raw);
+        const path = FileUri.fsPath(uri);
+        if (fs.existsSync(path)) {
+            throw new Error(`Error occurred while creating the file. File already exists at ${uri}.`);
+        }
+        const content = this.doGetContent(options);
+        const encoding = this.doGetEncoding(options);
+        fs.ensureDirSync(paths.dirname(path));
+        fs.writeFileSync(path, content, { encoding });
+        return await this.doGetStat(uri, 1)!;
     }
 
     createFolder(uri: string): Promise<FileStat> {
